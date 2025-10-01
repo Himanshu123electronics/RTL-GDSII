@@ -24,6 +24,7 @@ Workflow:
 -Open .vcd dump in GTKWave.
 
 This ensures functional correctness of the RTL before synthesis.
+Below github repo consists of std lib file
  ```bash
 git clone https://github.com/kunalg123/sky130RTLDesignAndSynthesisWorkshop.git
 cd sky130RTLDesignAndSynthesisWorkshop/verilog_files/
@@ -34,5 +35,16 @@ iverilog good_mux.v tb_good_mux.v
 ./a.out 
 gtkwave tb_good_mux.vcd
 ```
+
+## Yosys
+- Workflow:
+    -Read RTL → ```bash read_verilog your_design.v ```
+    -Synthesize Logic → ```bash synth -top <module name> ```
+    -Map to Standard Cells → ```bash abc -liberty your_lib.lib```
+    -View Design (Optional) → ```bash show ```
+    -Export Netlist → write_verilog output.v
+
+
+
   
          
