@@ -25,16 +25,16 @@ Workflow:
 
 This ensures functional correctness of the RTL before synthesis.
 Below github repo consists of std lib file
- ```bash
+```bash
 git clone https://github.com/kunalg123/sky130RTLDesignAndSynthesisWorkshop.git
 cd sky130RTLDesignAndSynthesisWorkshop/verilog_files/
 ```
 **Compile and verify**
  ```bash
-iverilog good_mux.v tb_good_mux.v
-./a.out 
-gtkwave tb_good_mux.vcd
-```
+ iverilog good_mux.v tb_good_mux.v
+ ./a.out 
+ gtkwave tb_good_mux.vcd
+ ```
 
 ## Yosys
 - Workflow:
@@ -43,8 +43,24 @@ gtkwave tb_good_mux.vcd
     -Map to Standard Cells → ```bash abc -liberty your_lib.lib```
     -View Design (Optional) → ```bash show ```
     -Export Netlist → write_verilog output.v
+- example
+ ```bash
+  yosys
+ ```
+ ```bash
+  read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+  read_verilog good_mux.v
+  synth -top good_mux
+  abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+  show
+ ```
+![Output](ana.png) 
 
-
+- For Netlist
+```bash
+ write_verilog -noattr good_mux_netlist.v
+ !vim good_mux_netlist.v
+```
 
   
          
