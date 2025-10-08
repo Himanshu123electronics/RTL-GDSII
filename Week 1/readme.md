@@ -54,13 +54,94 @@ cd sky130RTLDesignAndSynthesisWorkshop/verilog_files/
   abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
   show
  ```
-![Output](ana.png) 
+![Output](good_mux.png) 
 
 - For Netlist
 ```bash
  write_verilog -noattr good_mux_netlist.v
  !vim good_mux_netlist.v
 ```
+- Performed Gate level synthesis using Sky130 PDK standard cells.
+
+### Day - 2 --> Introduction to timing library and syntehsis methododlogy 
+In __hierarchical design__, a big system is broken down into smaller sub-systems, arranged like a tree structure (top → middle → bottom)
+ -Advantages:
+   -Clear organization and modularity
+   -Easier maintenance and scaling
+   -Reusable sub-modules
+   -Parallel team development is possible.
+-Disadvantages:
+ -More planning required initially
+ -Slightly more overhead in connecting modules.
+In __flat design__ , the entire system is built in one large block without breaking it into sub-modules. All components are described together.It's used for simple designs.
+ -Advantages:
+  -Fast to design for small systems
+  -No extra module connections.
+ -Disadvantages:
+  -Hard to debug and modify
+  -Not reusable
+  -Not scalable for large designs
+  -Becomes messy and confusing
+
+### Examples:
+- For Hierarchial design.
+   - Open Yosys
+     ```bash
+     yosys
+     ```
+   - Synthesis
+     ```bash
+     read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+     read_verilog multiple_modules.v
+     synth -top multiple_modules 
+     abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+     show multiple_modules
+     ```
+ - __OUTPUT__
+   ![multiplt_module](multimodules.png)
+
+- For Flat design
+  - Open Yosys
+     ```bash
+     yosys
+     ```
+   - Synthesis
+     ```bash
+     read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+     read_verilog multiple_modules.v
+     synth -top multiple_modules 
+     abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+     flatten
+     show multiple_modules
+     ```
+ - __OUTPUT__
+   ![Flatten](flatten_synthesis.png)
+
+## Synchronous and Asynchronous flip flops
+
+-A __synchronous__ flip-flop changes its output only when a clock pulse arrives.
+-Clock signal controls when the flip-flop updates.
+-All flip-flops are triggered together using the same clock.
+-Inputs like __SET__ and __RESET__ also work only at the clock edge.
+ -__Iverilog and gtkwave__
+  ```bash
+  iverilog dff_syncres.v tb_dff_syncres.v 
+  ./a.out
+  gtkwave tb_dff_syncres.vcd
+ ```
+- __Synthesis__
+  ```bash
+  read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+  read_verilog dff_syncres.v
+  synth -top dff_syncres
+  dfflibmap -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+  abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+  show
+  ```
+- __Output__
+  ![dff_sync](dff_sync.png)
+
+  
 
   
          
