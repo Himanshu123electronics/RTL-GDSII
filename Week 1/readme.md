@@ -141,7 +141,70 @@ In __flat design__ , the entire system is built in one large block without break
 - __Output__
   ![dff_sync](dff_sync.png)
 
-  
+-An __asynchronous__ flip-flop can change its output anytime, independent of the clock, usually through asynchronous SET or RESET pins.
+-Special inputs like preset (SET) and clear (RESET) act immediately, not waiting for clock.
+-These are often called “direct inputs.”
 
+-__Iverilog and gtkwave__
+  ```bash
+  iverilog dff_async.v tb_dff_async.v 
+  ./a.out
+  gtkwave tb_dff_async.vcd
+ ```
+- __Synthesis__
+  ```bash
+  read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+  read_verilog dff_async.v
+  synth -top dff_async
+  dfflibmap -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+  abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+  show
+  ```
+- __Output__
+  ![dff_async](dff_async.png)
+
+
+  ### Day 3 - Combinational and sequential circuit optimization
+   - __Logic optimization__ is the process where a synthesis tool automatically transforms a gate-level circuit into a  smaller,faster, and more power-efficient version without changing its logical function. The primary goal is to meet the design constraints for timing (performance), power consumption, and chip area.
+
+   - __Combinational logic__ optimization means reducing the complexity (gates, area, delay, power) of a digital logic circuit without changing its function.
+      - __Karnaugh Map (K-map) / Quine–McCluskey Minimization__
+      -Tools internally use advanced algorithms (similar to K-map for small circuits) to get minimum SOP (Sum of Products)           or POS (Product of Sums).
+      -K-map is practical for up to 4–6 variables.
+      -Quine–McCluskey is algorithmic and works for larger functions.
+      - __Common Subexpression Elimination__
+       -If the same logic expression appears multiple times, tools compute it once and share the result.
+       -Example:
+       -Y1 = A·B + C
+       -Y2 = A·B + D
+       -Instead of two A·B blocks → compute A·B once, use for both Y1 and Y2.
+     - __Constant Propagation and Folding__
+      -If some inputs are fixed (0 or 1), tools substitute constants and simplify.
+      -Example:
+       -Y = A·0 → Y = 0
+       -Z = B + 1 → Z = 1
+     - __Unused Logic Elimination__
+      -If some part of the circuit does not affect any output, tools remove it.
+       -Example:
+        -A temporary wire not connected to any output i.e eliminated.
+     - __Don’t-Care Condition Exploitation__
+      -If some input combinations never occur, tools can treat them as “X” (don’t care) and optimize aggressively.
+       Common in FSMs, encoders, decoders.
+        Benefit: Reduces number of minterms, simplifies expressions.
+    - __Technology Mapping Optimization__
+     -After logic simplification, tools map optimized logic to available standard cells or FPGA LUTs.
+      They try to pick the smallest and fastest combination of gates for the given function.
+    - __MUX (Multiplexer) Optimization__
+     -Multiplexer optimization means simplifying or reorganizing large multiplexer structures to reduce area, power, and           delay.
+     -This usually happens when the HDL code has nested if-else or case statements.
+     - If we have nested if-else statements GLN will use multiple mux for exah if - else statement.
+
+### In yosys optimization
+    - Use Command:
+     ```bash
+     opt_clean -purge
+     ```
+    - __Example__
+    -
   
          
