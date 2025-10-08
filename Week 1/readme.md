@@ -200,11 +200,60 @@ In __flat design__ , the entire system is built in one large block without break
      - If we have nested if-else statements GLN will use multiple mux for exah if - else statement.
 
 ### In yosys optimization
-    - Use Command:
+    - Use Command
      ```bash
      opt_clean -purge
      ```
     - __Example__
-    -
-  
-         
+    -open Yosys
+      ```bash
+      yosys
+      ```
+    - Synthesis
+      ```bash
+      read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+      read_verilog opt_check.v
+      synth -top opt_check
+      opt_clean -purge
+      abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+      show
+      ```
+![output](opt_check.png)
+
+### Sequential Optimization
+-__State Reduction__
+ -Minimize the number of states in the finite state machine (FSM).
+ - As Fewer states will have fewer flip-flops and less logic.
+ -Identify equivalent states 
+ -Merge them into a single state.
+ - Example:
+  -If state A and B behave identically, replace both with one state.
+-__Retiming__
+ -Move flip-flops across combinational logic to improve speed or reduce registers without changing functionality.
+ -Balance pipeline stages → shorter critical path → higher clock frequency.
+-__Unreachable State Removal__
+ -Eliminate states that can never be reached from the initial state.
+ - Reduces state table, flip-flops, and next-state logic.
+ -Traverse state graph → find unreachable nodes → delete.
+-__Clock Gating__
+ -In digital circuits, clock keeps toggling continuously, even if the flip-flop doesn’t need to update.
+  This wastes dynamic power (because clock switching is a big power consumer).
+ -__Clock gating__ means to stop giving clock pulses to parts of the circuit when they’re idle.
+  This reduces unnecessary switching activity → saves power.
+ -__Dynamic power__,P=a*C*V^2*F
+   -α = activity factor (how often signal toggles)
+   -C = load capacitance
+   -V = supply voltage
+   -f = clock frequency
+  -If we gate the clock, α ↓ → big power saving.
+- Register merging means combining multiple smaller registers into a single larger register, if they have similar control signals (clock, reset, enable).
+
+- Register splitting means dividing a large register into smaller parts, usually to improve timing or optimize enable conditions.
+
+Why do it:
+
+Some bits may not change often → separate enables can save power.
+
+Reduce critical path delay by breaking large buses.
+
+Allow partial clock gating.
