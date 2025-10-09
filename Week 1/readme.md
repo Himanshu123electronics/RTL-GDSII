@@ -246,14 +246,133 @@ In __flat design__ , the entire system is built in one large block without break
    -V = supply voltage
    -f = clock frequency
   -If we gate the clock, α ↓ → big power saving.
-- Register merging means combining multiple smaller registers into a single larger register, if they have similar control signals (clock, reset, enable).
+- __Register merging__ means combining multiple smaller registers into a single larger register, if they have similar control signals (clock, reset, enable).
+  -If we have 4, 1bit regs, then we would require independent clock for each reg which increases power consumption and load on clock tree. So we combine and make a 4 bit reg.
 
-- Register splitting means dividing a large register into smaller parts, usually to improve timing or optimize enable conditions.
+- __Register splitting__ means dividing a large register into smaller parts, usually to improve timing or optimize enable conditions.
+   -If we have a 10 bit regs and some of its bits doesn't change often so we can split in two parts so we can reduce delay as if bits in one is not changing then it is off.
 
-Why do it:
+### Example of d_ff
+- Gtkwave
+   - ```bash
+     iverilog dff_const1.v tb_dff_const1.v
+     ./a.out
+     gtkwave tb_dff_const1.vcd
+     ```
+- Yosys
+  - ```bash
+    read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+    read_verilog dff_const1.v
+    synth -top dff_const1
+    dfflibmap -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+    abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+    show
+    ```
+  - Output
+    - ![Output](dff_const.png)
 
-Some bits may not change often → separate enables can save power.
+__logic Trimming__ (or Dead Code Elimination): If the output of a flip-flop or a block of logic is not connected to anything else in the design (i.e., it has no fan-out), it serves no purpose. The synthesis tool will identify and completely remove these unused registers and any combinational logic that solely drives them, leading to significant savings in both area and power.
+  - Example - Counter
+  - Yosys
+     - ```bash
+       read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+       read_verilog counter_opt.v
+       synth -top counter_opt
+       dfflibmap -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+       abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+       show
+       ```
+    - Output
+      ![output](counter_opt.png)
 
-Reduce critical path delay by breaking large buses.
+### Blocking vs Non blocking
+ - Blocking Assignments (=)
+   - A blocking assignment (=) is executed sequentially, just like in a standard programming language. The execution of the       next statement is "blocked" until the current one is complete. The variable on the left-hand side is updated                 immediately.
+     
+    Best Used For: Combinational logic (always @(*)), where the logic flow is sequential.
+
+-Non-blocking Assignments (<=)
+ -A non-blocking assignment (<=) is executed concurrently. The simulator evaluates all the right-hand side expressions first and then, at the end of the time step, assigns those evaluated values to the left-hand side variables.
+ 
+    -Best Used For: Sequential logic (always @(posedge clk)), as it accurately models how flip-flops in hardware all change       state at the same time on a clock edge.
+    
+__Synthesis-Simulation Mismatch__
+-A synthesis-simulation mismatch is a critical design bug where the pre-synthesis RTL simulation behaves differently from the post-synthesis gate-level simulation.
+- When you use blocking assignments inside a clocked always block, the execution order inside the block affects results —
+but in hardware, all flip-flops update simultaneously on the clock edge.
+ - When we use blocking assignment in always clk block in real hardware we will have flip flops that capture value parallely at posedge
+-Example blocking cavet
+ -Gtkwave
+  -```bash
+   iverilog blocking_caveat.v tb_blocking_caveat.v
+   ./a.out
+   gtkwave tb_blocking_caveat.vcd
+   ```
+ - ![output](cavet.png)
+  -Yosys
+   -```bash
+   read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+   read_verilog blocking_caveat.v
+   synth -top blocking_caveat
+   abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+   write_verilog -noattr blocking_cavnet_net.v
+   show
+   ```
+  - ![output_syn](cavet_syn.png)
+
+### Optimizing constructs
+ -Both if and case statements describe conditional logic, but the synthesis tool can create very different hardware from them.
+ -if andelse-if Chain: This construct is synthesized into a priority encoder. Conditions are evaluated in order, meaning the first condition has the highest priority. This can create a long chain of logic that may result in slower timing paths.
+- case Statement: This is typically synthesized into a balanced multiplexer (MUX).
+
+__Incomplete Specification and Latches__
+A common pitfall is an "incomplete" if or case statement, where a signal is not assigned a value in every possible branch.
+ -To ensure the signal retains its value, the synthesis tool must infer memory. This creates an unintended latch.
+-  Latches are generally avoided in synchronous designs because they are transparent (not edge-triggered), can be susceptible to glitches, and complicate static timing analysis. Always ensure all paths assign a value to every signal or include a default case
+__For vs For generate__
+A for loop describes sequential behavior inside an always block. During synthesis, the tool unrolls the loop to create a large, replicated block of combinational logic. It cannot be used to create multiple instances of modules.
+-Analogy: One worker performing a series of repetitive tasks. The result is one large piece of work.
+
+-A for generate is a declarative statement used to create multiple instances of hardware. The tool elaborates the loop to create parallel, duplicated structures like modules, registers, or logic blocks. It is ideal for building regular, repetitive hardware like register files or connecting multiple cores.
+ -Analogy: Hiring multiple workers to perform the same task in parallel. The result is multiple identical pieces of hardware.
+  -Example - RCA
+   -gtkwave
+    ```bash
+    iverilog fa.v rca.v tb_rca.v
+    ./a.out
+    gtkwave tb_rca.vcd
+    ```
+    - yosys
+    ```bash
+    read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+    read_verilog fa.v rca.v
+    synth -top rca
+    abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+    write_verilog -noattr rca_net.v
+    select -module rca
+    show
+    ```
+![Output](rca.png)
+
+-Example Mux
+ -Gtkwave
+  - ```bash
+    iverilog mux_generate.v tb_mux_generate.v
+    ./a.out
+    gtkwave tb_mux_generate.vcd
+    ```
+-Yosys
+ - ```bash
+   read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+   read_verilog mux_generate.v
+   synth -top mux_generate
+   abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
+   write_verilog -noattr mux_generate_net.v
+   show
+   ```
+![output](mux_generate.png)
+  
+
+
 
 Allow partial clock gating.
