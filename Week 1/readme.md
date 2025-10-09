@@ -54,7 +54,7 @@ cd sky130RTLDesignAndSynthesisWorkshop/verilog_files/
   abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib
   show
  ```
-![Output](good_mux.png) 
+![Output](photo/good_mux.png) 
 
 - For Netlist
 ```bash
@@ -98,7 +98,7 @@ In __flat design__ , the entire system is built in one large block without break
      show multiple_modules
      ```
  - __OUTPUT__
-   ![multiplt_module](multimodules.png)
+   ![multiplt_module](photo/multimodules.png)
 
 - For Flat design
   - Open Yosys
@@ -115,7 +115,7 @@ In __flat design__ , the entire system is built in one large block without break
      show multiple_modules
      ```
  - __OUTPUT__
-   ![Flatten](flatten_synthesis.png)
+   ![Flatten](photo/flatten_synthesis.png)
 
 ## Synchronous and Asynchronous flip flops
 
@@ -139,7 +139,7 @@ In __flat design__ , the entire system is built in one large block without break
   show
   ```
 - __Output__
-  ![dff_sync](dff_sync.png)
+  ![dff_sync](photo/dff_sync.png)
 
 -An __asynchronous__ flip-flop can change its output anytime, independent of the clock, usually through asynchronous SET or RESET pins.
 -Special inputs like preset (SET) and clear (RESET) act immediately, not waiting for clock.
@@ -161,7 +161,7 @@ In __flat design__ , the entire system is built in one large block without break
   show
   ```
 - __Output__
-  ![dff_async](dff_async.png)
+  ![dff_async](photo/dff_async.png)
 
 
   ### Day 3 - Combinational and sequential circuit optimization
@@ -218,7 +218,7 @@ In __flat design__ , the entire system is built in one large block without break
       abc -liberty ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
       show
       ```
-![output](opt_check.png)
+![output](photo/opt_check.png)
 
 ### Sequential Optimization
 -__State Reduction__
@@ -269,7 +269,7 @@ In __flat design__ , the entire system is built in one large block without break
     show
     ```
   - Output
-    - ![Output](dff_const.png)
+    - ![Output](photo/dff_const.png)
 
 __logic Trimming__ (or Dead Code Elimination): If the output of a flip-flop or a block of logic is not connected to anything else in the design (i.e., it has no fan-out), it serves no purpose. The synthesis tool will identify and completely remove these unused registers and any combinational logic that solely drives them, leading to significant savings in both area and power.
   - Example - Counter
@@ -283,7 +283,7 @@ __logic Trimming__ (or Dead Code Elimination): If the output of a flip-flop or a
        show
        ```
     - Output
-      ![output](counter_opt.png)
+      ![output](photo/counter_opt.png)
 
 ### Blocking vs Non blocking
  - Blocking Assignments (=)
@@ -308,7 +308,7 @@ but in hardware, all flip-flops update simultaneously on the clock edge.
    ./a.out
    gtkwave tb_blocking_caveat.vcd
    ```
- - ![output](cavet.png)
+ - ![output](photo/cavet.png)
   -Yosys
    -```bash
    read_liberty -lib ../lib/sky130_fd_sc_hd__tt_025C_1v80.lib 
@@ -318,7 +318,7 @@ but in hardware, all flip-flops update simultaneously on the clock edge.
    write_verilog -noattr blocking_cavnet_net.v
    show
    ```
-  - ![output_syn](cavet_syn.png)
+  - ![output_syn](photo/cavet_syn.png)
 
 ### Optimizing constructs
  -Both if and case statements describe conditional logic, but the synthesis tool can create very different hardware from them.
@@ -352,7 +352,7 @@ A for loop describes sequential behavior inside an always block. During synthesi
     select -module rca
     show
     ```
-![Output](rca.png)
+![Output](photo/rca.png)
 
 -Example Mux
  -Gtkwave
@@ -370,7 +370,7 @@ A for loop describes sequential behavior inside an always block. During synthesi
    write_verilog -noattr mux_generate_net.v
    show
    ```
-![output](mux_generate.png)
+![output](photo/mux_generate.png)
   
 
 
